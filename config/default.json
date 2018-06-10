@@ -1,0 +1,60 @@
+{
+    "app": {
+        "host": "0.0.0.0",
+        "port": "8080",
+        "key": "ad32b4c7b4a5d142c509af4d963f3df0"
+    },
+    "db": {
+        "host": "sql5025.site4now.net",
+        "database": "DB_9FA049_Fritzgetz",
+        "dialect": "mssql",
+        "username": "DB_9FA049_Fritzgetz_admin",
+        "password": "fritzgetz11",
+        "minPoolSize": 0,
+        "maxPoolSize": 5,
+        "idleConnectionTimeout": 100000
+    },
+    "email": {
+        "authorization": {
+            "service": "gmail",
+            "auth": {
+                "user": "",
+                "pass": ""
+            }
+        },
+        "verification": {
+            "from": "dkelwa.kelwa@gmail.com",
+            "from_name": "Fritzgetz",
+            "expiry": "3"
+        },
+        "params": {
+            "server": "http://localhost:8080/",
+            "serverImg": "http://localhost/",
+            "company": "fritzgetz"
+        },
+        "activation_body": "Dear %name%,<br/><br/>Thank you for registering with us. Please click on below link to activate your account.<br/><br/><center><h2><a href='%server%rest/o/v1/emailVerify?id=%id%&c=%code%' target='_blank'> Verify Account</a></h2></center><br/><br/>Thanks<br>",
+        "activation_subject": "Verification Of fritzgetz",
+        "forgot_body": "Dear %name%,<br/><br/>Below are your login credentials for %company%.<br/><br/>Email: %email%<br/>Password: %password%<br/><br/>Thanks<br>%company%",
+        "forgot_subject": "Your login password"
+    },
+    "mobile": {
+        "android": "1",
+        "ios": "2",
+        "windows": "3"
+    },
+    "logger": {
+        "level": "debug",
+        "filename": "server.log",
+        "errorLogFile": "error.log",
+        "handleExceptions": true
+    },
+    "redis": {
+        "host": "127.0.0.1",
+        "port": "6379"
+    },
+    "token": {
+        "secret": "default",
+        "expiry": 360000,
+        "ttlInSeconds": 259200
+    }
+}

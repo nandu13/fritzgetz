@@ -1,0 +1,191 @@
+CREATE DATABASE fart;
+
+CREATE EXTENSION citext;
+CREATE TABLE user_reg
+(
+  id serial,
+  first_name citext,
+  last_name citext,
+  email citext unique,
+  password citext,
+  mobile citext,
+  city citext,
+  created bigint,
+  updated bigint,
+  status smallint,
+  country citext,
+  dob citext,
+  gender citext,
+  PRIMARY KEY (id)
+);
+
+
+CREATE Table email_form(
+    id serial PRIMARY KEY,
+    unique_key citext unique,
+    subject citext,
+    email_body citext,
+    status smallint,
+    created bigint
+);
+
+
+ALTER table user_reg add column activation citext;
+
+
+ALTER table user_reg add column activation_exp bigint;
+
+ALTER table user_reg add column nick_name citext;
+ALTER table user_reg add column profile_pic citext;
+
+insert into email_form(
+    unique_key,
+    subject ,
+    email_body) values('forgot_password'
+,'You login password','Dear %name%,<br/><br/>Below are your login credentials for %company%.<br/><br/>Email:
+%email%<br/>Password: %password%<br/><br/>Thanks<br>%company%');
+
+insert into email_form(
+    unique_key,
+    subject ,
+    email_body) values('activation'
+,'Verification Of Blast','Dear %name%,<br/><br/>Thank you for registering with %company%.
+Please click on below link to activate your account.<br/><br/><center><h2><a href=''%server%rest/o/v1/emailVerify?id=%id%&c=%code%'' target=''_blank''>
+Verify Account</a></h2></center><br/><br/>Thanks<br>%company%
+');
+
+insert into email_form(
+    unique_key,
+    subject ,
+    email_body) values('activationP'
+,'Verify your email address','Dear %name%,<br/><br/>Thank you for registering with %company%.
+Please click on below link to activate your account.<br/><br/><center><h2><a href=''%server%rest/o/v1/emailVerifyP?id=%id%&c=%code%'' target=''_blank''>
+Verify Account</a></h2></center><br/><br/>Thanks<br>%company%
+');
+
+ 1 | activationP     | Verify your email address | Dear %name%,<br/><br/>Thank you for registering with %company%.
+ Please click on below link to activate your account.<br/><br/><center><h2><a href='%server%rest/o/v1/emailVerifyP?id=%id%&c=%code%' target='_blank'>Verify Account</a></h2></center><br/><br/>Thanks<br>%company% |      1 |
+
+
+
+
+CREATE TABLE IF NOT EXISTS user_contacts(
+    id serial PRIMARY KEY,
+    user_email citext,
+    friend_email citext,
+    friend_avtar citext,
+    nick_name citext,
+    status smallint,
+    fr_status smallint,
+    updated_on bigint,
+    request_on bigint
+);
+
+CREATE TABLE IF NOT EXISTS user_challenges(
+    id serial PRIMARY KEY,
+    initiator_email citext,
+    rival_email citext,
+    initiator_name citext,
+    rival_name citext,
+    fart_count integer,
+    fart_type citext,
+    initiator_fart_count integer,
+    rival_fart_count integer,
+    status smallint,
+    updated_on bigint,
+    created_on bigint
+);
+
+alter table user_challenges add column initiator_score json;
+alter table user_challenges add column rival_score json;
+alter table user_challenges add column winner citext;
+
+alter table user_reg add column score real;
+
+
+CREATE TABLE IF NOT EXISTS sns_endpoint (
+	id citext PRIMARY KEY,
+	registration_id text,
+	arn text,
+	created_on bigint,
+	updated_on bigint
+);
+
+CREATE TABLE IF NOT EXISTS sns_topic (
+	id serial PRIMARY KEY,
+	name text,
+	arn text,
+	type text,
+	created_on bigint,
+	updated_on bigint
+);
+
+alter table sns_endpoint add column platform text;
+
+
+
+CREATE TABLE IF NOT EXISTS notification_archive (
+    id serial PRIMARY KEY,
+    user_email citext,
+    title varchar(500),
+    message json,
+    send_on bigint,
+    updated_on bigint,
+    notification_type text,
+    type text,
+    send_to json
+);
+alter table user_challenges add column initiator_image citext;
+
+alter table user_challenges add column rival_image citext;
+
+
+CREATE TABLE IF NOT EXISTS challenge_count (
+    first_email citext,
+    second_email citext ,
+    total_count integer,
+    first_win_count integer,
+    second_win_count integer,
+    primary key (first_email,second_email)
+);
+
+
+CREATE TABLE IF NOT EXISTS level (
+        id  serial PRIMARY KEY,
+        level_name text,
+        start_range integer,
+        end_range integer,
+        defalut_image text,
+        achieve_image text,
+        created_on bigint
+);
+
+insert into level(level_name,start_range,end_range,defalut_image,achieve_image,created_on) values
+('Butt Putter',0,5,'','',1481440556);
+insert into level(level_name,start_range,end_range,defalut_image,achieve_image,created_on) values
+('Fart Ninja',6,50,'','',1481440556);
+insert into level(level_name,start_range,end_range,defalut_image,achieve_image,created_on) values
+('Master Blaster',50,9999999999,'','',1481440556);
+
+
+alter table level add describtion citext;
+update  level set describtion  = '0-5 battles won' where id = 3;
+update  level set describtion  = '5-50 battles won' where id = 4;
+update  level set describtion  = '50+  battles won' where id = 5;
+
+update level set defalut_image = 'http://35.164.145.191/images/Ronin128BW.png',achieve_image = 'http://35.164.145.191/images/Ronin128.png' where id =3;
+
+
+update level set defalut_image = 'http://35.164.145.191/images/Samurai1287W.png',achieve_image = 'http://35.164.145.191/images/Samurai128.png' where id =4;
+
+update level set defalut_image = 'http://35.164.145.191/images/Diamyos128BW.png',achieve_image = 'http://35.164.145.191/images/Diamyos128.png' where id =5;
+
+
+
+id |   level_name   | start_range | end_range |                  defalut_image                  |                achieve_image                 | created_on | describtion
+----+----------------+-------------+-----------+-------------------------------------------------+----------------------------------------------+------------+-------------
+  1 | Butt Putter    |           0 |         5 | http://13.59.40.230/image/Fart_Ninja_bw.png     | http://13.59.40.230/image/Fart_Ninja.png     | 1481440556 |
+  2 | Fart Ninja     |           6 |        50 | http://13.59.40.230/image/Butt_Putter_bw.png    | http://13.59.40.230/image/Butt_Putter.png    | 1481440556 |
+  3 | Master Blaster |          51 |     10000 | http://13.59.40.230/image/Master_Blaster_bw.png | http://13.59.40.230/image/Master_Blaster.png |            |
+(3 rows)
+

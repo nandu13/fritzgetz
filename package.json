@@ -1,0 +1,20 @@
+{
+  "name": "fritzgetz",
+  "version": "0.0.1",
+  "dependencies": {
+    "argh": "^0.1.4",
+    "async": "^2.6.1",
+    "aws-sdk": "^2.254.1",
+    "config": "^1.30.0",
+    "express": "^4.16.3",
+    "jwt-simple": "^0.5.1",
+    "longjohn": "^0.2.12",
+    "nodemailer": "^4.6.5",
+    "redis": "^2.8.0",
+    "request": "^2.87.0",
+    "rootpath": "^0.1.2",
+    "sequelize": "^4.37.10",
+    "tedious": "^2.6.1",
+    "winston": "^2.4.2"
+  }
+}

@@ -1,0 +1,227 @@
+/**
+ * Created by dharmendra on 9/10/16.
+ */
+
+'use strict';
+
+var fs = require('fs'),
+    config = require('config'),
+    M = require('src/models'),
+    moment = require('moment'),
+    constant = require('src/utils/constant'),
+    mail = require('src/utils/email-sender'),
+    async = require('async'),
+    helper = require('src/utils/helper'),
+    log = require('src/utils/logger')(module),
+    notification = require('src/utils/notification'),
+    _ = require('lodash');
+
+var sendFriendRequest = function (req, res) {
+    var user = req.user;
+    var body = req.body;
+    var friendEmail = body.friendEmail;
+    if(user.user === friendEmail){
+        return helper.returnFalse(req, res, constant.REG_MESSAGE.FRIEND_TO_YOURSELF, {});
+    }else {
+        M.get('UserReg').findOne({
+            where: {email: friendEmail, status: constant.ACCOUNT_STATUS.ACTIVE}
+        }).then(function onSuccess(results) {
+            M.get('UserContacts').findAll({
+                where: {
+                    $and: [
+                        {
+                            $or: [
+                                {
+                                    "userEmail": [user.user, friendEmail]
+                                }
+                            ]
+                        },
+                        {
+                            $or: [
+                                {
+                                    "friendEmail": [user.user, friendEmail]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }).then(function (exists) {
+                if (exists.length > 0) {
+                    return helper.returnFalse(req, res, constant.REG_MESSAGE.FRIEND_ALREADY, {});
+                } else {
+                    var message =
+                    {
+                        "message": constant.NOTIFICATION_MESSAGE.FRIEND_REQ,
+                        "title": "Friend Request"
+                    };
+                    if (results) {
+                        /* async.parallel({
+                            notification: notification._notifyUser.bind(null, friendEmail, message, constant.NOTIFICATION.TYPE_FRIEND, null)
+                            // userDate: M.get('UserReg').fetchUserByEmailId.bind(M.get('UserReg'), req.body.email)
+                        }, function onRegistration(err, result) {*/
+                                // console.log("errr====> " + err.message);
+                                // helper.returnFalse(req, res, constant.REG_MESSAGE.FRIEND_REG_FAILED, {});
+                                var currentDate = moment();
+
+                                var userContacts = {
+                                    userEmail: user.user,
+                                    friendEmail: friendEmail,
+                                    requestOn: currentDate.unix(),
+                                    updatedOn: currentDate.unix(),
+                                    status: constant.FRIEND_REQ_STATUS.SEND,
+                                    frStatus: constant.FRIEND_REQ_STATUS.RECEIVED
+                                };
+                                M.get('UserContacts').build(userContacts).save()
+                                    .then(function (user) {
+                                    }, function (err) {
+                                        /*  helper.returnFalse(req, res, constant.REG_MESSAGE.FRIEND_REG_FAILED, {});
+                                         return helper.returnTrue(req, res, constant.REG_MESSAGE.FRIEND_REG_SUCCESS, {});*/
+                                    });
+                               /* var notfy = {
+                                    title: message.title,
+                                    message: message.message,
+                                    type: constant.NOTIFICATION.TYPE_FRIEND,
+                                    notificationType: 'PUSH NOTIFICATION',
+                                    sendOn: moment().unix(),
+                                    updatedOn: moment().unix(),
+                                    userEmail: friendEmail
+                                };
+                                M.get('NotificationArchive').upsert(notfy);*/
+                                return helper.returnTrue(req, res, constant.REG_MESSAGE.FRIEND_REG_SUCCESS, {});
+                        // });
+                    } else {
+                        // send application invitation from mail
+                        M.get('EmailForm').findOne({
+                            where: {unique_key: "invitation_mfityics"}
+                        }).then(function onfetchEForm(eform) {
+                            var currentDate = moment();
+                            var userContacts = {
+                                userEmail: user.user,
+                                friendEmail: friendEmail,
+                                requestOn: currentDate.unix(),
+                                updatedOn: currentDate.unix(),
+                                status: constant.FRIEND_REQ_STATUS.INVITATION_SEND,
+                                frStatus: constant.FRIEND_REQ_STATUS.INVITATION_RECEIVED
+                            };
+                            var html1 = eform.email_body;
+                            html1 = html1.replace('%name%', friendEmail);
+                            html1 = html1.replace('%friendemail%', user.user);
+                            /*html1 = html1.replace('%id%', user.id);
+                             html1 = html1.replace(/%company%/gi, config.email.params.company);
+                             html1 = html1.replace('%server%', config.email.params.server);
+                             html1 = html1.replace('%code%', token);*/
+
+                            mail.mailSend(friendEmail, eform.subject, '', html1, function (error, info) {
+                                if (error) {
+                                    // return cb(error);
+                                }
+                                // return cb();
+                            });
+                            M.get('UserContacts').build(userContacts).save()
+                                .then(function (user) {
+                                }, function (err) {
+
+                                    // helper.returnFalse(req, res, constant.REG_MESSAGE.FRIEND_REG_FAILED, {});
+                                });
+                            return helper.returnTrue(req, res, constant.REG_MESSAGE.INVITATION_SEND, {});
+
+                        });
+                    }
+                }
+            });
+        });
+    }
+};
+
+var searchContacts = function (req, res) {
+    var text = req.body.searchEmail;
+    M.get('UserReg').findAll({
+        where: {
+            email: {$like: text + '%'}
+        },
+        attributes: ['id', 'email']
+    }).then(function onMessageSearch(results) {
+        helper.returnTrue(req, res, '', results);
+    }, function (err) {
+        helper.returnFalse(req, res, constant.ERROR.UNABLE_TO_FETCH, {});
+    });
+};
+
+var friendReqResponse = function (req, res) {
+    var user = req.user;
+    var status = req.body.status;
+    var friendEmail = req.body.friendEmail;
+
+    if(status == -1){
+        M.get('UserContacts').destroy(
+            {
+                where: {userEmail: friendEmail, friendEmail: user.user }
+            }).then(function () {
+                helper.returnTrue(req, res, constant.REG_MESSAGE.FRIEND_REG_UPDATE, {});
+                }, function (err) {
+                    helper.returnTrue(req, res, constant.REG_MESSAGE.FRIEND_REG_UPDATE, {});
+                });
+    }else {
+        M.get('UserContacts').update(
+            {
+                status: status,
+                updatedOn: moment().unix()
+            },
+            {
+                where: {userEmail: user.user, friendEmail: friendEmail}
+            }).then(function (data) {
+            log.info(data);
+            // helper.returnTrue(req, res, constant.REG_MESSAGE.FRIEND_REG_UPDATE, {});
+        }, function (err) {
+            log.info(err);
+            // helper.returnTrue(req, res, constant.REG_MESSAGE.FRIEND_REG_UPDATE, {});
+        });
+        M.get('UserContacts').update(
+            {
+                frStatus: status,
+                updatedOn: moment().unix()
+            },
+            {
+                where: {userEmail: friendEmail, friendEmail: user.user}
+            }).then(function (data) {
+            log.info(data);
+            helper.returnTrue(req, res, constant.REG_MESSAGE.FRIEND_REG_UPDATE, {});
+        }, function (err) {
+            log.info(err);
+            helper.returnTrue(req, res, constant.REG_MESSAGE.FRIEND_REG_UPDATE, {});
+        });
+    }
+
+};
+
+var getFriendsList = function (req, res) {
+    var user = req.user;
+    var status = req.body.status;
+    var friendEmail = req.body.friendEmail;
+
+    async.parallel({
+        userFriend: M.get('UserContacts').fetchFriendByUserEmail.bind(M.get('UserContacts'), user.user),
+        friend: M.get('UserContacts').fetchFriendByFriendEmail.bind(M.get('UserContacts'), user.user)
+    }, function onFetchFriend(err, result) {
+        if (err) {
+            console.log(err);
+            helper.returnFalse(req, res, constant.REG_MESSAGE.FRIEND_FETCH_FAILED, []);
+        } else {
+            var data = [];
+            data = data.concat(result.userFriend);
+            data = data.concat(result.friend);
+            return helper.returnTrue(req, res, constant.REG_MESSAGE.FRIEND_FETCH_SUCCESS, data);
+        }
+    });
+
+};
+
+var contact = {
+    searchContacts: searchContacts,
+    sendFriendRequest: sendFriendRequest,
+    friendReqResponse: friendReqResponse,
+    getFriendsList: getFriendsList
+
+};
+
+module.exports = contact;
