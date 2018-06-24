@@ -70,7 +70,7 @@ var registration = function (req, res, next) {
                 userReg.status = constant.ACCOUNT_STATUS.WAIT_FOR_EMAIL_VALIDATION;
                 userReg.updatedOn = moment().unix();
                 userReg.createdOn = moment().unix();
-                userReg.password = req.body.password||'';
+                userReg.password = req.body.password || '';
                 userReg.activation = token;
                 userReg.activationExp = expire;
                 // userReg.profile_pic = config.aws.s3url + config.aws.fartFolder + '/' + req.body.email + '.jpg';
@@ -78,16 +78,16 @@ var registration = function (req, res, next) {
                     console.log(err);
                     if (err) {
                         helper.returnFalse(req, res, constant.REG_MESSAGE.REG_FAILED, {status: constant.ACCOUNT_STATUS.ERROR});
-                    }else{
-                    var html1 = config.email.activation_body;
-                    html1 = html1.replace('%name%', "User");
-                    html1 = html1.replace('%id%', data.id);
-                    html1 = html1.replace(/%company%/gi, config.email.params.company);
-                    html1 = html1.replace('%server%', config.email.params.server);
-                    html1 = html1.replace('%code%', token);
-console.log(html1);
-                    mail.mailSend(req.body.email, config.email.activation_subject, '', html1, next);
-                    helper.returnTrue(req, res, constant.REG_MESSAGE.EMAIL_VERIFICATION, {status: constant.ACCOUNT_STATUS.WAIT_FOR_EMAIL_VALIDATION});
+                    } else {
+                        var html1 = config.email.activation_body;
+                        html1 = html1.replace('%name%', "User");
+                        html1 = html1.replace('%id%', data.id);
+                        html1 = html1.replace(/%company%/gi, config.email.params.company);
+                        html1 = html1.replace('%server%', config.email.params.server);
+                        html1 = html1.replace('%code%', token);
+                        console.log(html1);
+                        mail.mailSend(req.body.email, config.email.activation_subject, '', html1, next);
+                        helper.returnTrue(req, res, constant.REG_MESSAGE.EMAIL_VERIFICATION, {status: constant.ACCOUNT_STATUS.WAIT_FOR_EMAIL_VALIDATION});
                     }
                 });
             }
@@ -124,27 +124,27 @@ var verifyEmail = function (req, res) {
                         var token = crypto.randomBytes(16).toString('hex');
                         CurrentDate.add(config.email.verification.expiry, 'hours');
                         var expire = CurrentDate.unix();
-                       
-                            var html1 = config.email.activation_body;
-                            html1 = html1.replace('%name%', userReg.first_name + " " + userReg.last_name);
-                            html1 = html1.replace('%id%', user.id);
-                            html1 = html1.replace(/%company%/gi, config.email.params.company);
-                            html1 = html1.replace('%server%', config.email.params.server);
-                            html1 = html1.replace('%code%', token);
 
-                            mail.mailSend(req.body.email, config.email.activation.subject, '', html1, next);
-                            var userReg = M.get('UserReg');
-                            userReg.update(
-                                    {
-                                        activation: token,
-                                        activationExp: expire
-                                    },
-                                    {
-                                        where: {id: req.query.id}
-                                    }).then(function (user) {
-                                res.status(200).send(constant.REG_MESSAGE.ACC_SEND_ACTIVATION_AGAIN);
-                            });
-                       
+                        var html1 = config.email.activation_body;
+                        html1 = html1.replace('%name%', userReg.first_name + " " + userReg.last_name);
+                        html1 = html1.replace('%id%', user.id);
+                        html1 = html1.replace(/%company%/gi, config.email.params.company);
+                        html1 = html1.replace('%server%', config.email.params.server);
+                        html1 = html1.replace('%code%', token);
+
+                        mail.mailSend(req.body.email, config.email.activation.subject, '', html1, next);
+                        var userReg = M.get('UserReg');
+                        userReg.update(
+                                {
+                                    activation: token,
+                                    activationExp: expire
+                                },
+                                {
+                                    where: {id: req.query.id}
+                                }).then(function (user) {
+                            res.status(200).send(constant.REG_MESSAGE.ACC_SEND_ACTIVATION_AGAIN);
+                        });
+
                     }
                 } else {
                     res.status(200).send(constant.REG_MESSAGE.ACC_ACTIVATE_LOGIN);
@@ -165,58 +165,18 @@ var fetchProfile = function (req, res) {
 
     async.parallel({
         // notification: notification.register.bind(null, req, res),
-        user: M.get('UserReg').fetchUserByEmailId.bind(M.get('UserReg'), userEmail),
-        totalChallenges: M.get('UserChallenges').totalChallengesCount.bind(M.get('UserChallenges'), userEmail),
-        winChallenges: M.get('UserChallenges').winningChallengesCount.bind(M.get('UserChallenges'), userEmail),
-        level: M.get('Level').fetchAllLevel.bind(M.get('Level')),
+        user: fetchUserByEmailId.bind(M.get('UserReg'), userEmail)
 
-        // challengesCount: M.get('LeaderBoard').fetchUserChallengeCount.bind(M.get('LeaderBoard'), userEmail)
+                // challengesCount: M.get('LeaderBoard').fetchUserChallengeCount.bind(M.get('LeaderBoard'), userEmail)
     }, function onRegistration(err, results) {
-        var profile, achievement = [], totalCount = 0, winCount = 0, level = [];
         if (results.user) {
             results.user.password = '';
-            profile = {
+            var profile = {
                 "user": results.user,
             };
-            if (results.winChallenges)
-                for (var i = 0; i < results.winChallenges.length; i++) {
-                    winCount = winCount + parseInt(results.winChallenges[i].totalwinning ? results.winChallenges[i].totalwinning : 0)
-                    achievement.push({
-                        // "logo": results.challengesCount[i].icon_image_url,
-                        "lb": results.winChallenges[i].fart_type,
-                        "count": results.winChallenges[i].totalwinning ? results.winChallenges[i].totalwinning : 0,
-                        // "id": results.challengesCount[i].tid
-                    });
 
-                    /* if (results.challengesCount[i].tid === 9 || results.challengesCount[i].tid === 10) {
-                     combatCount = combatCount + parseInt(results.challengesCount[i].winchallenges ? results.challengesCount[i].winchallenges : 0)
-                     } else {
-                     clashCount = clashCount + parseInt(results.challengesCount[i].winchallenges ? results.challengesCount[i].winchallenges : 0)
-                     }*/
-                }
-
-            if (results.level) {
-                // var totalWon = results.challengesCount[0] ? results.challengesCount[0].winchallenges : 0;
-                var newLevel = [];
-                for (var i = 0; i < results.level.length; i++) {
-                    var image = results.level[i].defalut_image;
-                    if (winCount >= results.level[i].start_range) {
-                        image = results.level[i].achieve_image;
-                    }
-                    newLevel.push({
-                        "logo": image,
-                        "lb": results.level[i].level_name,
-                        "description": results.level[i].describtion,
-                        "hash_code": results.level[i].hash_code
-                    })
-                }
-                level = newLevel;
-            }
             var array = {
-                "profile": profile,
-                "total_challenge": results.totalChallenges ? (results.totalChallenges[0] ? results.totalChallenges[0].totalchallenges : 0) : 0,
-                "winning_challenge": winCount,
-                "achievement": level
+                "profile": profile
             };
             helper.returnTrue(req, res, '', array);
         } else {
@@ -227,42 +187,6 @@ var fetchProfile = function (req, res) {
 
 };
 
-var fetchProfileByID = function (req, res) {
-    var id = req.body.id;
-    if (id === '') {
-        helper.returnFalse(req, res, constant.ERROR.UNABLE_TO_FETCH, {});
-    }
-    M.get('UserReg').findOne({
-        where: {id: id}
-    }).then(function onUserFetch(user) {
-        if (user === null) {
-            helper.returnFalse(req, res, constant.ERROR.UNABLE_TO_FETCH, {});
-        }
-        user.credits = 0;
-        var array = {
-            "profile": {
-                "background": config.email.params.serverImg + "images/Profile_BG.jpg",
-                "user": user,
-                "creditCap": config.credits.creditCap
-            },
-            "challanges": {
-                "total": 10,
-                "won": 5
-            },
-            "achievements": [
-                {
-                    "logo": config.email.params.serverImg + "images/warrior-icon.png",
-                    "lb": "Warrior"
-                },
-                {
-                    "logo": config.email.params.serverImg + "images/gladiator-icon.png",
-                    "lb": "Gladiator"
-                }
-            ]
-        };
-        helper.returnTrue(req, res, '', array);
-    });
-};
 
 var updateProfile = function (req, res) {
     var payload = auth1.decodeToken(req.headers.authorization.split(' ')[1]);
@@ -271,21 +195,13 @@ var updateProfile = function (req, res) {
     M.get('UserReg').findOne({
         where: {id: id}
     }).then(function onUserFetch(user) {
-        var userReg = M.get('UserReg');
-        userReg.update(
-                {
-                    email: req.body.email,
-                    first_name: req.body.first_name,
-                    last_name: req.body.last_name || '',
-                    nick_name: req.body.nick_name || '',
-                    dob: req.body.dob || '',
-                    gender: req.body.gender || '',
-                    updated: moment().unix(),
-                    city: req.body.city || '',
-                    country: 'GBR',
-                    mobile: req.body.mobile || '',
-                    password: req.body.password || ''
-                },
+        var userReg = {};
+        userReg.firstName = req.body.firstName || user.firstName;
+        userReg.lastName = req.body.lastName || user.lastName;
+        userReg.updatedOn = moment().unix();
+        userReg.password = req.body.password || '';
+        M.get('UserReg').update(
+                userReg,
                 {
                     where: {id: id}
                 }).then(function (newuser) {
@@ -298,20 +214,6 @@ var updateProfile = function (req, res) {
     });
 };
 
-var searchContacts = function (req, res) {
-    var text = req.body.searchEmail;
-    M.get('UserReg').findAll({
-        where: {
-            $or: [{first_name: {$like: text + '%'}}, {last_name: {$like: text + '%'}}, {email: {$like: text + '%'}}],
-            status: constant.ACCOUNT_STATUS.ACTIVE
-        },
-        attributes: ['id', 'email', ['first_name', 'fname'], ['last_name', 'lname'], ['nick_name', 'nick']]
-    }).then(function onMessageSearch(results) {
-        helper.returnTrue(req, res, '', results);
-    }, function (err) {
-        helper.returnFalse(req, res, constant.ERROR.UNABLE_TO_FETCH, {});
-    });
-};
 
 var registrationFacebook = function (req, res, next) {
     log.info("User Registration =====>", req.body);
@@ -362,7 +264,7 @@ var registrationFacebook = function (req, res, next) {
                 userReg.status = constant.ACCOUNT_STATUS.ACTIVE;
                 userReg.updatedOn = moment().unix();
                 userReg.createdOn = moment().unix();
-                userReg.activation = token;
+//                userReg.activation = token;
                 // userReg.profile_pic = config.aws.s3url + config.aws.fartFolder + '/' + req.body.email + '.jpg';
                 userReg.score = 0;
                 createUserRegistration(userReg, function (err, data) {
@@ -394,35 +296,14 @@ var registrationFacebook = function (req, res, next) {
     });
 };
 
-var updatePic = function (req, res) {
-    var payload = auth1.decodeToken(req.headers.authorization.split(' ')[1]);
-    var id = payload.id;
-    M.get('UserReg').findOne({
-        where: {id: id}
-    }).then(function onUserFetch(user) {
-        var userReg = M.get('UserReg');
-        userReg.update(
-                {
-                    profile_pic: config.aws.s3url + config.aws.fartFolder + '/' + payload.user + '.jpg',
-                    updated: moment().unix()
 
-                },
-                {
-                    where: {id: id}
-                }).then(function (newuser) {
-            helper.returnTrue(req, res, constant.REG_MESSAGE.PROFILE_UPDATED, {});
-        }, function (err) {
-            helper.returnFalse(req, res, constant.ERROR.UNABLE_TO_UPDATE, {});
-        });
-    }, function (err) {
-        helper.returnFalse(req, res, constant.ERROR.UNABLE_TO_UPDATE, {});
-    });
-};
 
 var provider = {
     registration: registration,
     registrationFacebook: registrationFacebook,
-    verifyEmail: verifyEmail
+    verifyEmail: verifyEmail,
+    updateProfile: updateProfile,
+    fetchProfile : fetchProfile
 };
 
 module.exports = provider;

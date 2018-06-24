@@ -24,7 +24,10 @@ var sequelize = new Sequelize(config.database, config.username, config.password,
 });
 
 var models = {
-    UserReg: sequelize.import(__dirname + '/user-reg')
+    UserReg: sequelize.import(__dirname + '/user-reg'),
+    UserAlter: sequelize.import(__dirname + '/user-alter'),
+    Website: sequelize.import(__dirname + '/web-sites'),
+    AlterPrice: sequelize.import(__dirname + '/alterPrice')
 };
 
 module.exports = models;

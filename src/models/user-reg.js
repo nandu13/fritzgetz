@@ -53,6 +53,14 @@ module.exports = function (sequelize, DataTypes) {
         activationExp:{
             type: 'varchar',
             field: 'activationExp'
+        },
+        deviceToken:{
+            type: 'varchar',
+            field: 'deviceToken'
+        },
+        platform:{
+            type: 'varchar',
+            field: 'platform'
         }
     }, {
         freezeTableName: true,

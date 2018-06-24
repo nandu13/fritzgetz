@@ -47,7 +47,7 @@ var login = function (req, res, next) {
                     });
                 } else if (results.userData.status === constant.ACCOUNT_STATUS.ACTIVE) {
                     token = auth1.createJWT({
-                        id: results.userData.ID,
+                        id: results.userData.id,
                         user: results.userData.email,
                         name : results.userData.firstName + ' ' + results.userData.lastName
                     });
@@ -58,8 +58,8 @@ var login = function (req, res, next) {
                             log.info('Token updated in redis for user ', results.userData.id);
                         }
                     });
-//                    notification.register(req, res, function () {
-//                    })
+                    notification.register(req, res, function () {
+                    })
                     helper.returnTrue(req, res, constant.REG_MESSAGE.SUCCESSFUL, {
                         status: results.userData.status,
                         token: token

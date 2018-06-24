@@ -4,8 +4,10 @@ var express = require('express'),
     router = express.Router(),
     auth = require('src/rest/auth'),
     user = require('src/rest/user'),
+    userAlert = require('src/rest/userAlert'),
     helper = require('src/utils/helper'),
-    auth1 = require('src/utils/auth');
+    auth1 = require('src/utils/auth'),
+    website = require('src/rest/website');
   
 
 
@@ -16,6 +18,15 @@ var BASE_URL = '/rest/';
 router.post(BASE_URL + 'o/v1/user/registration', user.registration);
 router.post(BASE_URL + 'o/v1/user/other/registration', user.registrationFacebook);
 router.post(BASE_URL + 'o/v1/login', auth.login);
+router.get(BASE_URL + 'v1/user/profile', user.fetchProfile);
+router.patch(BASE_URL + 'v1/user/profile', user.updateProfile);
+
+router.get(BASE_URL + 'v1/website', website.getWebsites);
+
+router.post(BASE_URL + 'v1/user/alert', userAlert.createUserAlter);
+router.get(BASE_URL + 'v1/user/alert', userAlert.getUserAlert);
+router.get(BASE_URL + 'v1/user/alert/:id/price', userAlert.getUserAlterPrice);
+router.patch(BASE_URL + 'v1/user/alert', userAlert.updateUserAlter);
 //Email verify
 router.get(BASE_URL + 'o/v1/emailVerify', user.verifyEmail);
 //Forgot password
@@ -27,7 +38,7 @@ module.exports = function (app) {
         .use(bodyParser.json({limit: '5mb'}))
         .all('/*', function (req, res, next) {
             res.header("Access-Control-Allow-Origin", "*");
-            res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+            res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,PATCH,DELETE,OPTIONS');
             res.header('Access-Control-Allow-Credentials', true);
             res.header('Authorization', true);
             // Set custom headers for CORS

@@ -18,12 +18,12 @@
         "authorization": {
             "service": "gmail",
             "auth": {
-                "user": "",
-                "pass": ""
+                "user": "freelanceindore1984@gmail.com",
+                "pass": "testkelwa"
             }
         },
         "verification": {
-            "from": "dkelwa.kelwa@gmail.com",
+            "from": "freelanceindore1984@gmail.com",
             "from_name": "Fritzgetz",
             "expiry": "3"
         },
