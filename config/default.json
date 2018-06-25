@@ -28,8 +28,8 @@
             "expiry": "3"
         },
         "params": {
-            "server": "http://localhost:8080/",
-            "serverImg": "http://localhost/",
+            "server": "http://94.16.118.118:8080/",
+            "serverImg": "http://94.16.118.118/",
             "company": "fritzgetz"
         },
         "activation_body": "Dear %name%,<br/><br/>Thank you for registering with us. Please click on below link to activate your account.<br/><br/><center><h2><a href='%server%rest/o/v1/emailVerify?id=%id%&c=%code%' target='_blank'> Verify Account</a></h2></center><br/><br/>Thanks<br>",
