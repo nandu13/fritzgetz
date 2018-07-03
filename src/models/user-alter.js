@@ -45,6 +45,10 @@ module.exports = function (sequelize, DataTypes) {
         status: {
             type: 'SMALLINT',
             field: 'status'
+        },
+         price: {
+            type: 'real',
+            field: 'price'
         }
     }, {
         freezeTableName: true,

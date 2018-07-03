@@ -17,9 +17,9 @@ var fs = require('fs'),
         notification = require('src/rest/notification'),
         redis = require('src/redis').getRedisInstance();
 
-var createUserRegistration = function (corporate, cb) {
+var createAdminRegistration = function (corporate, cb) {
     console.log(" createUserRegistration reg ===========>", corporate);
-    M.get('UserReg').create(corporate).then(function (data) {
+    M.get('admin').create(corporate).then(function (data) {
         cb(null, data);
     }).catch(function (err) {
         console.log(err);
@@ -29,8 +29,8 @@ var createUserRegistration = function (corporate, cb) {
     });
 }
 
-var fetchUserByEmailId = function (emailId, cb) {
-    M.get('UserReg').findOne({
+var fetchAdminByEmailId = function (emailId, cb) {
+    M.get('admin').findOne({
         where: {email: emailId}
     }).then(function (results) {
         cb(null, results);
@@ -46,7 +46,7 @@ var registration = function (req, res, next) {
     log.info("User Registration =====>", req.body);
     var token = crypto.randomBytes(16).toString('hex');
     async.parallel({
-        userDate: fetchUserByEmailId.bind(M.get('UserReg'), req.body.email)
+        userDate: fetchAdminByEmailId.bind(M.get('admin'), req.body.email)
     }, function onRegistration(err, results) {
         if (results) {
             if (results.userDate) {
@@ -62,7 +62,7 @@ var registration = function (req, res, next) {
                 CurrentDate.add(config.email.verification.expiry, 'hours');
                 var expire = CurrentDate.unix();
                 var profile_pic = '';
-                var userReg = M.get('UserReg');
+                var userReg = M.get('admin');
                 userReg.id = '';
                 userReg.email = req.body.email;
                 userReg.firstName = req.body.firstName || '';
@@ -74,12 +74,12 @@ var registration = function (req, res, next) {
                 userReg.activation = token;
                 userReg.activationExp = expire;
                 // userReg.profile_pic = config.aws.s3url + config.aws.fartFolder + '/' + req.body.email + '.jpg';
-                createUserRegistration(userReg, function (err, data) {
+                createAdminRegistration(userReg, function (err, data) {
                     console.log(err);
                     if (err) {
                         helper.returnFalse(req, res, constant.REG_MESSAGE.REG_FAILED, {status: constant.ACCOUNT_STATUS.ERROR});
                     } else {
-                        var html1 = config.email.activation_body;
+                        var html1 = config.email.activation_body_admin;
                         html1 = html1.replace('%name%', "User");
                         html1 = html1.replace('%id%', data.id);
                         html1 = html1.replace(/%company%/gi, config.email.params.company);
@@ -98,8 +98,8 @@ var registration = function (req, res, next) {
 };
 
 var verifyEmail = function (req, res) {
-    var userReg = M.get('UserReg');
-    M.get('UserReg').findOne({
+    var userReg = M.get('admin');
+    M.get('admin').findOne({
         where: {id: req.query.id}
     })
             .then(function (results) {
@@ -107,7 +107,7 @@ var verifyEmail = function (req, res) {
                 var time = moment().unix();
                 if (results.activation == activation_code) {
                     if (time < results.activationExp) {
-                        var userReg = M.get('UserReg');
+                        var userReg = M.get('admin');
                         userReg.update(
                                 {
                                     activation: "",
@@ -125,7 +125,7 @@ var verifyEmail = function (req, res) {
                         CurrentDate.add(config.email.verification.expiry, 'hours');
                         var expire = CurrentDate.unix();
 
-                        var html1 = config.email.activation_body;
+                        var html1 = config.email.activation_body_admin;
                         html1 = html1.replace('%name%', userReg.first_name + " " + userReg.last_name);
                         html1 = html1.replace('%id%', user.id);
                         html1 = html1.replace(/%company%/gi, config.email.params.company);
@@ -133,7 +133,7 @@ var verifyEmail = function (req, res) {
                         html1 = html1.replace('%code%', token);
 
                         mail.mailSend(req.body.email, config.email.activation.subject, '', html1, next);
-                        var userReg = M.get('UserReg');
+                        var userReg = M.get('admin');
                         userReg.update(
                                 {
                                     activation: token,
@@ -165,7 +165,7 @@ var fetchProfile = function (req, res) {
 
     async.parallel({
         // notification: notification.register.bind(null, req, res),
-        user: fetchUserByEmailId.bind(M.get('UserReg'), userEmail)
+        user: fetchAdminByEmailId.bind(M.get('admin'), userEmail)
 
                 // challengesCount: M.get('LeaderBoard').fetchUserChallengeCount.bind(M.get('LeaderBoard'), userEmail)
     }, function onRegistration(err, results) {
@@ -190,24 +190,20 @@ var fetchProfile = function (req, res) {
 
 var updateProfile = function (req, res) {
     var payload = auth1.decodeToken(req.headers.authorization.split(' ')[1]);
-    var userEmail = payload.user;
-    var email = req.body.email;
-    if (email) {
-        userEmail = email;
-    }
-    M.get('UserReg').findOne({
-        where: {email: userEmail}
+    var id = payload.id;
+    var updateTime = moment().unix();
+    M.get('admin').findOne({
+        where: {id: id}
     }).then(function onUserFetch(user) {
         var userReg = {};
         userReg.firstName = req.body.firstName || user.firstName;
         userReg.lastName = req.body.lastName || user.lastName;
         userReg.updatedOn = moment().unix();
         userReg.password = req.body.password || '';
-        userReg.status = req.body.status || user.status;
-        M.get('UserReg').update(
+        M.get('admin').update(
                 userReg,
                 {
-                    where: {email: userEmail}
+                    where: {id: id}
                 }).then(function (newuser) {
             helper.returnTrue(req, res, constant.REG_MESSAGE.PROFILE_UPDATED, {});
         }, function (err) {
@@ -219,95 +215,27 @@ var updateProfile = function (req, res) {
 };
 
 
-var registrationFacebook = function (req, res, next) {
-    log.info("User Registration =====>", req.body);
-    var token;
-    async.parallel({
-        userData: fetchUserByEmailId.bind(M.get('UserReg'), req.body.email)
-    }, function onRegistration(err, results) {
-        if (results) {
-            if (results.userData) {
-                M.get('UserReg').update(
-                        {
-                            status: constant.ACCOUNT_STATUS.ACTIVE
-                        },
-                        {
-                            where: {email: results.userData.email}
-                        }).then(function (newuser) {
-                    token = auth1.createJWT({
-                        id: results.userData.id,
-                        user: results.userData.email
-                    });
-                    redis.addToken(results.userData.id, token, function (err, reply) {
-                        if (err) {
-                            log.info('Token not updated in redis for user ', results.userData.id);
-                        } else {
-                            log.info('Token updated in redis for user ', results.userData.id);
-                        }
-                    });
-                    notification.register(req, res, function () {
-                    })
-                    helper.returnTrue(req, res, constant.REG_MESSAGE.SUCCESSFUL, {
-                        status: constant.ACCOUNT_STATUS.ACTIVE,
-                        token: token
-                    });
-                }, function (err) {
-                    helper.returnFalse(req, res, constant.ERROR.UNABLE_TO_UPDATE, {});
-                });
+var allUserProfile = function (req, res) {
+   
+    M.get('UserReg').findAll().then(function onUserFetch(users) {
 
-            } else {
-                var CurrentDate = moment();
-                CurrentDate.add(config.email.verification.expiry, 'hours');
-                var expire = CurrentDate.unix();
-                var profile_pic = '';
-                var userReg = M.get('UserReg');
-                userReg.id = '';
-                userReg.email = req.body.email;
-                userReg.firstName = req.body.first_name;
-                userReg.lastName = req.body.last_name || '';
-                userReg.status = constant.ACCOUNT_STATUS.ACTIVE;
-                userReg.updatedOn = moment().unix();
-                userReg.createdOn = moment().unix();
-//                userReg.activation = token;
-                // userReg.profile_pic = config.aws.s3url + config.aws.fartFolder + '/' + req.body.email + '.jpg';
-                userReg.score = 0;
-                createUserRegistration(userReg, function (err, data) {
-                    if (err) {
-                        helper.returnFalse(req, res, constant.REG_MESSAGE.REG_FAILED, {status: constant.ACCOUNT_STATUS.ERROR});
-                    }
-                    token = auth1.createJWT({
-                        id: data.ID,
-                        user: data.email
-                    });
-                    redis.addToken(data.ID, token, function (err, reply) {
-                        if (err) {
-                            log.info('Token not updated in redis for user ', data.id);
-                        } else {
-                            log.info('Token updated in redis for user ', data.id);
-                        }
-                    });
-//                    notification.register(req, res, function () {
-//                    })
-                    helper.returnTrue(req, res, constant.REG_MESSAGE.SUCCESSFUL, {
-                        status: data.status,
-                        token: token
-                    });
-                });
-            }
-        } else {
-            helper.returnFalse(req, res, constant.REG_MESSAGE.DEVICE_REG_FAILED, {status: constant.ACCOUNT_STATUS.ERROR});
-        }
+        helper.returnTrue(req, res, 'Success', users);
+
+    }, function (err) {
+        helper.returnFalse(req, res, 'Error', {});
     });
 };
 
 
 
-var user = {
+
+
+var admin = {
     registration: registration,
-    registrationFacebook: registrationFacebook,
     verifyEmail: verifyEmail,
     updateProfile: updateProfile,
-    fetchProfile : fetchProfile
+    fetchProfile: fetchProfile,
+    allUserProfile: allUserProfile
 };
 
-module.exports = user;
+module.exports = admin;

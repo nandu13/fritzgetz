@@ -27,7 +27,8 @@ var models = {
     UserReg: sequelize.import(__dirname + '/user-reg'),
     UserAlter: sequelize.import(__dirname + '/user-alter'),
     Website: sequelize.import(__dirname + '/web-sites'),
-    AlterPrice: sequelize.import(__dirname + '/alterPrice')
+    AlterPrice: sequelize.import(__dirname + '/alterPrice'),
+    admin: sequelize.import(__dirname + '/admin')
 };
 
 module.exports = models;

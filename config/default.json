@@ -35,7 +35,9 @@
         "activation_body": "Dear %name%,<br/><br/>Thank you for registering with us. Please click on below link to activate your account.<br/><br/><center><h2><a href='%server%rest/o/v1/emailVerify?id=%id%&c=%code%' target='_blank'> Verify Account</a></h2></center><br/><br/>Thanks<br>",
         "activation_subject": "Verification Of fritzgetz",
         "forgot_body": "Dear %name%,<br/><br/>Below are your login credentials for %company%.<br/><br/>Email: %email%<br/>Password: %password%<br/><br/>Thanks<br>%company%",
-        "forgot_subject": "Your login password"
+        "forgot_subject": "Your login password",
+        "activation_body_admin": "Dear %name%,<br/><br/>Thank you for registering with us. Please click on below link to activate your account.<br/><br/><center><h2><a href='%server%rest/o/v1/admin/emailVerify?id=%id%&c=%code%' target='_blank'> Verify Account</a></h2></center><br/><br/>Thanks<br>"
+        
     },
     "mobile": {
         "android": "1",

@@ -25,9 +25,9 @@ var createUserAlter = function (req, res, next) {
 };
 
 var _fetchPriceAndNotificationSend = function (userAlert, next) {
-    job.excuteUserAlter(userAlert, function (err) {
+    job.excuteUserAlter(userAlert, function (err, data) {
         console.log(" _fetchPriceAndNotificationSend == >", err);
-        next();
+        next(null, data);
     });
 };
 
@@ -116,11 +116,14 @@ function arrayMax(arr) {
 
 
 var getUserAlter = function (req, res, next) {
-    var email = req.user.user;
-
+    var userEmail = req.user.user;
+    var email = req.query.email;
+    if (email) {
+        userEmail = email;
+    }
     M.get('UserAlter').findAll({
         where: {
-            email: email
+            email: userEmail
         },
         order: [
             ['createdOn', 'DESC']
@@ -134,11 +137,16 @@ var getUserAlter = function (req, res, next) {
 };
 
 var updateUserAlter = function (req, res, next) {
-    var user = req.user;
+    
+    var userEmail = req.user.user;
+    var email = req.body.email;
+    if (email) {
+        userEmail = email;
+    }
     var id = req.body.alter_id;
 
     async.waterfall([
-        _findUserAlter.bind(null, user.email, id, req.body),
+        _findUserAlter.bind(null, userEmail, id, req.body),
         _updateUserAlter.bind(null, req.body), //Check user if challenge already complete
 //        _updateChallenge.bind(null, user, score, url),
 //       _sendUserNotification.bind(null, obj, message),
@@ -200,15 +208,15 @@ var _updateUserAlter = function (body, user, next) {
 var getUserAlterPrice = function (req, res, next) {
     var email = req.user.user;
     var alertId = req.params.id;
-    
+
     console.log(req.params.id);
-    
-    
+
+
 
     M.get('AlterPrice').findAll({
         where: {
             email: email,
-            alertId:alertId
+            alertId: alertId
         },
         order: [
             ['createdOn', 'DESC']
@@ -221,10 +229,49 @@ var getUserAlterPrice = function (req, res, next) {
     });
 };
 
+var _getFetchAlterPrice = function (email, alertId, next) {
+    M.get('UserAlter').findOne({
+        where: {
+            email: email,
+            id: alertId
+        }
+    }).then(function (data) {
+        if (data) {
+            next(null, data);
+        } else {
+            next({
+                message: "Alert does not exits for this user"
+            });
+        }
+    }).catch(function (err) {
+        console.log(err);
+        next({
+            message: "Alert does not exits for this user"
+        });
+    });
+};
+
+var fetchCurrentPrice = function (req, res, next) {
+    var email = req.user.user;
+    var alertId = req.params.id;
+
+    async.waterfall([
+        _getFetchAlterPrice.bind(null, email, alertId), //Check user if challenge already complete
+        _fetchPriceAndNotificationSend.bind(null)
+    ], function (err, price) {
+        log.info('=>err', err);
+        if (err) {
+            helper.returnFalse(req, res, err.message, {});
+        } else
+            helper.returnTrue(req, res, 'Success', {price: price});
+    });
+};
+
 var userAlert = {
     createUserAlter: createUserAlter,
     getUserAlert: getUserAlter,
     updateUserAlter: updateUserAlter,
-    getUserAlterPrice: getUserAlterPrice
+    getUserAlterPrice: getUserAlterPrice,
+    fetchCurrentPrice: fetchCurrentPrice
 }
 module.exports = userAlert;

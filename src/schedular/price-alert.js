@@ -35,46 +35,57 @@ var excuteUserAlter = function (userAlert, done) {
         _parseUrlData.bind(null, userAlert.webSite),
         _usertLatestPrice.bind(null, userAlert), //Check user if challenge already complete
         _sendUserNotification.bind(null, userAlert),
-    ], function (err) {
+    ], function (err,price) {
         log.info('=>err', err);
         if (err) {
             done(err);
         } else
-           done();
+            done(null,price);
     });
 };
 
 var _usertLatestPrice = function (userAlert, price, next) {
 
     var alterPrice = {};
-    alterPrice.id ='';
+    alterPrice.id = '';
     alterPrice.alertId = userAlert.id;
     alterPrice.price = price;
     alterPrice.email = userAlert.email;
     alterPrice.createdOn = moment().unix();
     alterPrice.updatedOn = moment().unix();
-    console.log('  alterPrice ',JSON.stringify(alterPrice));
+    console.log('  alterPrice ', JSON.stringify(alterPrice));
+    M.get('UserAlter').update({
+        price: price
+    }, {
+        where: {
+            id: userAlert.id
+        }
+    }
+    ).then(function (data) {
+    }, function (err) {
+    });
     M.get('AlterPrice').create(
             alterPrice).then(function (data) {
-        next(null,price);
+        next(null, price);
     }, function (err) {
         if (err)
             next(err);
 
     });
 
+
 };
 
 var _sendUserNotification = function (userAlert, price, next) {
-    var message = "Current price of alter "+ userAlert.id +" is " + price;
-    console.log("  message ",message);
-    notification.notificationSend(userAlert.email,message,function(err,data){
-        if(err){
-            console.log('Notification error ->',err);
+    var message = "Current price of alter " + userAlert.id + " is " + price;
+    console.log("  message ", message);
+    notification.notificationSend(userAlert.email, message, function (err, data) {
+        if (err) {
+            console.log('Notification error ->', err);
             next(err);
-        }else{
-            console.log('Notification send ->',data);
-            next(null,data);
+        } else {
+            console.log('Notification send ->', data);
+            next(null, price);
         }
     })
 
@@ -88,14 +99,14 @@ var _fetchUrlData = function (url, next) {
     }, function (error, response, body) {
         if (error)
             next({'error': error});
-        else{
-        try {
+        else {
+            try {
 
-            next(null, body);
-        } catch (error) {
+                next(null, body);
+            } catch (error) {
 //            next({'error': error});
+            }
         }
-    }
     });
 };
 
