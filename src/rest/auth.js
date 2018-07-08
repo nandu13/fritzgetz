@@ -80,21 +80,18 @@ var login = function (req, res, next) {
                 } else if (results.userData.status === constant.ACCOUNT_STATUS.SUSPENDED) {
                     helper.returnTrue(req, res, constant.REG_MESSAGE.ACC_SUSPENDED, {
                         status: results.userData.status,
-                        token: token,
-                        profile: results
+                        token: token
                     });
                 } else if (results.userData.status === constant.ACCOUNT_STATUS.DELETED) {
                     helper.returnTrue(req, res, constant.REG_MESSAGE.ACC_DELETED, {
                         status: results.userData.status,
-                        token: token,
-                        profile: results
+                        token: token
                     });
                 }
             } else {
                 helper.returnFalse(req, res, constant.REG_MESSAGE.PASSWORD_NOT_MATCH, {
                     status: results.userData.status,
-                    token: token,
-                    profile: results
+                    token: token
                 });
             }
         } else {

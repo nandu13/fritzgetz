@@ -118,13 +118,40 @@ var _parseUrlData = function (webSite, urlData, next) {
         var price;
         switch (webSite) {
             case 'ASOS':
-//                productUrl = body.url;
+               var $ = cheerio.load(urlData);
+                $("span").each(function () {
+                    var link = $(this);
+                    var text = link.attr('class');
+                    if (text === 'current-price product-price-discounted') {
+                        console.log(" -> " +link.text());
+                        price = link.text();
+                    }
+
+                });
                 break;
             case 'Zalando':
-//                productUrl = body.url;
+             var $ = cheerio.load(urlData);
+                $("meta").each(function () {
+                    var link = $(this);
+                    var text = link.attr('name');
+                    if (text === 'twitter:data1') {
+                        console.log(" -> " +link.attr('content'));
+                        price = link.attr('content');
+                    }
+
+                });
                 break;
             case 'Topshop':
-//                productUrl = body.url;
+              var $ = cheerio.load(urlData);
+                $("meta").each(function () {
+                    var link = $(this);
+                    var text = link.attr('property');
+                    if (text === 'og:price:amount') {
+                        console.log(" -> " +link.attr('content'));
+                        price = link.attr('content');
+                    }
+
+                });
                 break;
             case 'H&M':
                 var $ = cheerio.load(urlData);
@@ -139,22 +166,79 @@ var _parseUrlData = function (webSite, urlData, next) {
                 });
                 break;
             case 'ESPRIT':
-//                productUrl = body.url;
+               var $ = cheerio.load(urlData);
+                $("span").each(function () {
+                    var link = $(this);
+                    var text = link.attr('class')
+                    if (text === 'spv-price__selling highlighted') {
+                        console.log(" -> " + link.text());
+                        price = link.text();
+                    }
+
+                });
                 break;
             case 'COSSTORES':
-//                productUrl = body.url;
+            var $ = cheerio.load(urlData);
+                $("label").each(function () {
+                    var link = $(this);
+                    var text = link.attr('class')
+                    if (text === 'a-label js-a-label is-reduced product-price') {
+                        console.log(" -> " + link.text());
+                         price = link.text();
+                        
+                    }
+
+                });
                 break;
             case 'SHOP.MANGO':
-//                productUrl = body.url;
+                var $ = cheerio.load(urlData);
+                $("p").each(function () {
+                    var link = $(this);
+                    var text = link.attr('class')
+                    if (text === 'sticky-text-info sticky-price--discount') {
+                        console.log(" -> " + link.text());
+                         price = link.text();
+                        
+                    }
+
+                });
                 break;
             case 'BREUNINGER':
-//                productUrl = body.url;
+                var $ = cheerio.load(urlData);
+                $("meta").each(function () {
+                    var link = $(this);
+                    var text = link.attr('itemprop')
+                    if (text === 'price') {
+                        console.log(" -> " + link.attr('content'));
+                         price = link.attr('content')
+                        
+                    }
+
+                });
                 break;
             case 'NET A PORTER':
-//                productUrl = body.url;
+                var $ = cheerio.load(urlData);
+                $("span").each(function () {
+                    var link = $(this);
+                    var text = link.attr('class')
+                    if (text === 'full-price style-scope nap-price') {
+                        console.log(" -> " + link.text());
+                        price = link.text();
+                    }
+
+                });
                 break;
             case 'UNIQLO':
-//                productUrl = body.url;
+               var $ = cheerio.load(urlData);
+                $("span").each(function () {
+                    var link = $(this);
+                    var text = link.attr('class')
+                    if (text === 'price-sales') {
+                        console.log(" -> " + link.text());
+                        price = link.text();
+                    }
+
+                });
                 break;
         }
         log.info('=================> _parseUrlData ', price);
