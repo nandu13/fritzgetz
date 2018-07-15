@@ -158,9 +158,9 @@ var _parseUrlData = function (webSite, urlData, next) {
                 $("span").each(function () {
                     var link = $(this);
                     var text = link.attr('class')
-                    if (text === 'price-value') {
-                        console.log(" -> " + link.text().trim().split('Rs.')[1].trim());
-                        price = link.text().trim().split('Rs.')[1].trim();
+                    if (text === 'price') {
+                        console.log(" -> " + link.text());
+                        price = link.text();
                     }
 
                 });
