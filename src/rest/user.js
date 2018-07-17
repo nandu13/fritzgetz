@@ -15,7 +15,8 @@ var fs = require('fs'),
         auth1 = require('src/utils/auth'),
         log = require('src/utils/logger')(module),
         notification = require('src/rest/notification'),
-        redis = require('src/redis').getRedisInstance();
+        redis = require('src/redis').getRedisInstance(),
+        md5 = require('md5');
 
 var createUserRegistration = function (corporate, cb) {
     console.log(" createUserRegistration reg ===========>", corporate);
@@ -31,7 +32,8 @@ var createUserRegistration = function (corporate, cb) {
 
 var fetchUserByEmailId = function (emailId, cb) {
     M.get('UserReg').findOne({
-        where: {email: emailId}
+//        where: {email: emailId}
+        where: {UserName: emailId}
     }).then(function (results) {
         cb(null, results);
     }, function (err) {
@@ -63,14 +65,25 @@ var registration = function (req, res, next) {
                 var expire = CurrentDate.unix();
                 var profile_pic = '';
                 var userReg = M.get('UserReg');
-                userReg.id = '';
+                userReg.id = crypto.randomBytes(16).toString('hex');
+                userReg.UserName = req.body.email;
                 userReg.email = req.body.email;
-                userReg.firstName = req.body.firstName || '';
-                userReg.lastName = req.body.lastName || '';
+                userReg.EmailConfirmed = false;
+                userReg.PhoneNumberConfirmed = false;
+                userReg.LockoutEnabled = false;
+                userReg.TwoFactorEnabled = false;
+                userReg.AccessFailedCount = 0;
+//                userReg.firstName = req.body.firstName || '';
+//                userReg.lastName = req.body.lastName || '';
                 userReg.status = constant.ACCOUNT_STATUS.WAIT_FOR_EMAIL_VALIDATION;
-                userReg.updatedOn = moment().unix();
-                userReg.createdOn = moment().unix();
-                userReg.password = req.body.password || '';
+//                userReg.updatedOn = moment().unix();
+//                userReg.createdOn = moment().unix();
+                if (req.body.password) {
+
+                    userReg.password = crypto.createHash('md5').update(req.body.password).digest("hex");
+                } else {
+                    console.log("Password empty");
+                }
                 userReg.activation = token;
                 userReg.activationExp = expire;
                 // userReg.profile_pic = config.aws.s3url + config.aws.fartFolder + '/' + req.body.email + '.jpg';
@@ -112,7 +125,8 @@ var verifyEmail = function (req, res) {
                                 {
                                     activation: "",
                                     activationExp: "0",
-                                    status: constant.ACCOUNT_STATUS.ACTIVE
+                                    status: constant.ACCOUNT_STATUS.ACTIVE,
+                                    EmailConfirmed:true
                                 },
                                 {
                                     where: {id: req.query.id}
@@ -196,18 +210,19 @@ var updateProfile = function (req, res) {
         userEmail = email;
     }
     M.get('UserReg').findOne({
-        where: {email: userEmail}
+        where: {UserName: userEmail}
     }).then(function onUserFetch(user) {
         var userReg = {};
-        userReg.firstName = req.body.firstName || user.firstName;
-        userReg.lastName = req.body.lastName || user.lastName;
         userReg.updatedOn = moment().unix();
-        userReg.password = req.body.password || '';
+        if (req.body.password) {
+            userReg.password = crypto.createHash('md5').update(req.body.password).digest("hex");
+        }
+
         userReg.status = req.body.status || user.status;
         M.get('UserReg').update(
                 userReg,
                 {
-                    where: {email: userEmail}
+                    where: {UserName: userEmail}
                 }).then(function (newuser) {
             helper.returnTrue(req, res, constant.REG_MESSAGE.PROFILE_UPDATED, {});
         }, function (err) {
@@ -307,7 +322,7 @@ var user = {
     registrationFacebook: registrationFacebook,
     verifyEmail: verifyEmail,
     updateProfile: updateProfile,
-    fetchProfile : fetchProfile
+    fetchProfile: fetchProfile
 };
 
 module.exports = user;

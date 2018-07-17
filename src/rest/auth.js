@@ -9,12 +9,13 @@ var fs = require('fs'),
         async = require('async'),
         notification = require('src/rest/notification'),
         auth1 = require('src/utils/auth'),
-        redis = require('src/redis').getRedisInstance();
+        redis = require('src/redis').getRedisInstance(),
+        crypto = require('crypto');
 
 
 var fetchUserByEmailId = function (emailId, cb) {
     M.get('UserReg').findOne({
-        where: {email: emailId}
+        where: {UserName: emailId}
     }).then(function (results) {
         cb(null, results);
     }, function (err) {
@@ -51,7 +52,7 @@ var login = function (req, res, next) {
                 token: token
             });
         } else if (results && results.userData) {
-            if (password === results.userData.password) {
+            if (crypto.createHash('md5').update(password).digest("hex")=== results.userData.password) {
                 if (results.userData.status === constant.ACCOUNT_STATUS.WAIT_FOR_EMAIL_VALIDATION) {
                     helper.returnTrue(req, res, constant.REG_MESSAGE.PENDING_EMAIL_VERIFICATION, {
                         status: results.userData.status,
@@ -60,8 +61,7 @@ var login = function (req, res, next) {
                 } else if (results.userData.status === constant.ACCOUNT_STATUS.ACTIVE) {
                     token = auth1.createJWT({
                         id: results.userData.id,
-                        user: results.userData.email,
-                        name: results.userData.firstName + ' ' + results.userData.lastName
+                        user: results.userData.email
                     });
                     redis.addToken(results.userData.id, token, function (err, reply) {
                         if (err) {
@@ -106,57 +106,14 @@ var login = function (req, res, next) {
 
 
 
-var loginTemp = function (req, res, next) {
-    var email = req.body.email;
-    var password = req.body.password;
-    var token = "";
-    var table = "";
-    if (req.body.user_type === 'Provider') {
-        table = "ProviderReg";
-    } else {
-        table = "CustomerReg";
-    }
-    async.parallel({
-        userData: M.get(table).fetchUserByEmailId.bind(M.get(table), email)
-    }, function (err, results) {
-        if (err) {
-            helper.returnFalse(req, res, "ERROR", {"Error": err});
-        }
-        if (results && results.userData) {
-            if (password === results.userData.password) {
-                if (results.userData.status === constant.ACCOUNT_STATUS.ACTIVE) {
-                    token = auth1.createJWT({
-                        id: results.userData.id,
-                        type: req.body.user_type,
-                        user: results.userData.email
-                    });
-                    redis.addToken(results.userData.id, token, function (err, reply) {
-                        if (err) {
-                            log.info('Token not updated in redis for user ', results.userData.id);
-                        } else {
-                            helper.returnTrue(req, res, constant.REG_MESSAGE.SUCCESSFUL, {
-                                token: token
-                            });
-                        }
-                    });
-                } else {
-                    helper.returnFalse(req, res, "ERROR", {"Error": constant.ERROR.ACCOUNT_NOT_ACTIVE});
-                }
-            }
-        } else {
-            helper.returnFalse(req, res, "Password not match", {});
-        }
-    });
-};
-
 var forgotPassword = function (req, res, next) {
     var email = req.body.email;
     M.get('UserReg').findOne({
-        where: {email: email}
+        where: {UserName: email}
     }).then(function (result) {
         if (result) {
             var html1 = config.email.forgot_body;
-            html1 = html1.replace('%name%', result.first_name + " " + result.last_name);
+            html1 = html1.replace('%name%', result.email);
             html1 = html1.replace('%email%', result.email);
             html1 = html1.replace(/%company%/gi, config.email.params.company);
             html1 = html1.replace('%password%', result.password);
@@ -262,8 +219,7 @@ var auth = {
     login: login,
     adminLogin: adminLogin,
     adminForgotPassword: adminForgotPassword,
-    forgotPassword: forgotPassword,
-    loginTemp: loginTemp
+    forgotPassword: forgotPassword
 };
 
 module.exports = auth;

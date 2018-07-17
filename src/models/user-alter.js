@@ -11,44 +11,52 @@ var async = require('async'),
 var M = require('src/models');
 
 module.exports = function (sequelize, DataTypes) {
-    return sequelize.define('userAlert', {  
+    return sequelize.define('product', {  
         id: {
             type: 'numeric',
             field: 'ID',
             autoIncrement: true,
             primaryKey: true
         },
-        email: {
-            type: 'varchar',
-            field: 'email'
+        AddedByUserID: {
+            type: 'nvarchar',
+            field: 'AddedByUserID'
         },
         url: {
-            type: 'varchar',
-            field: 'url'
+            type: 'nvarchar',
+            field: 'URL'
         },
-        articalNumber: {
-            type: 'varchar',
-            field: 'articalNumber'
-        },
-        webSite: {
-            type: 'varchar',
-            field: 'webSite'
+        WebsiteID: {
+            type: 'int',
+            field: 'WebsiteID'
         },
         createdOn: {
-            type: DataTypes.BIGINT,
-            field: 'createdOn'
+            type: 'datetime',
+            field: 'CreatedDate'
+        },
+        lastCheckedDate:{
+            type: 'datetime',
+            field: 'LastCheckedDate'
         },
         updatedOn: {
-            type: DataTypes.BIGINT,
-            field: 'updatedOn'
+            type: 'datetime',
+            field: 'LastUpdatedDate'
         },
         status: {
             type: 'SMALLINT',
             field: 'status'
         },
-         price: {
-            type: 'real',
-            field: 'price'
+        price: {
+            type: 'nvarchar',
+            field: 'CurrentPrice'
+        },
+        CreatedByIP: {
+            type: 'nvarchar',
+            field: 'CreatedByIP'
+        },
+        LastUpdatedByIP: {
+            type: 'nvarchar',
+            field: 'LastUpdatedByIP'
         }
     }, {
         freezeTableName: true,

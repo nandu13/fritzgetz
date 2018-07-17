@@ -5,78 +5,97 @@
 'use strict';
 
 var async = require('async'),
-    moment = require('moment'),
-    config = require('config');
+        moment = require('moment'),
+        config = require('config');
 
 var M = require('src/models');
 
 module.exports = function (sequelize, DataTypes) {
-    return sequelize.define('UserRegistration', {  
+    return sequelize.define('AspNetUsers', {
         id: {
-            type: 'numeric',
-            field: 'ID',
-            autoIncrement: true,
+            type: 'nvarchar',
+            field: 'Id',
             primaryKey: true
         },
         email: {
-            type: 'varchar',
-            field: 'email'
+            type: 'nvarchar',
+            field: 'Email'
         },
-        firstName: {
-            type: 'varchar',
-            field: 'firstName'
+        UserName: {
+            type: 'nvarchar',
+            field: 'UserName'
         },
-        lastName: {
-            type: 'varchar',
-            field: 'lastName'
+        EmailConfirmed: {
+            type: 'bit',
+            field: 'EmailConfirmed'
         },
         password: {
-            type: 'varchar',
-            field: 'password'
+            type: 'nvarchar',
+            field: 'PasswordHash'
         },
-        createdOn: {
-            type: DataTypes.BIGINT,
-            field: 'createdOn'
+        SecurityStamp: {
+            type: 'nvarchar',
+            field: 'SecurityStamp'
         },
-        updatedOn: {
-            type: DataTypes.BIGINT,
-            field: 'updatedOn'
+        PhoneNumber: {
+            type: 'nvarchar',
+            field: 'PhoneNumber'
+        },
+        PhoneNumberConfirmed: {
+            type: 'bit',
+            field: 'PhoneNumberConfirmed'
+        },
+        LockoutEndDateUtc: {
+            type: 'datetime',
+            field: 'LockoutEndDateUtc'
+        },
+        LockoutEnabled: {
+            type: 'bit',
+            field: 'LockoutEnabled'
+        },
+        TwoFactorEnabled:{
+            type: 'bit',
+            field: 'TwoFactorEnabled'
+        },
+        AccessFailedCount:{
+            type: 'int',
+            field: 'AccessFailedCount'
         },
         status: {
             type: 'SMALLINT',
             field: 'status'
         },
-        activation:{
+        activation: {
             type: 'varchar',
             field: 'activation'
         },
-        activationExp:{
+        activationExp: {
             type: 'varchar',
             field: 'activationExp'
         },
-        deviceToken:{
+        deviceToken: {
             type: 'varchar',
             field: 'deviceToken'
         },
-        platform:{
+        platform: {
             type: 'varchar',
             field: 'platform'
         }
     }, {
         freezeTableName: true,
         classMethods: {
-           
-            fetchLeaderBoard: function ( limit, cb) {
+
+            fetchLeaderBoard: function (limit, cb) {
                 var query = "select first_name,last_name,email,score,profile_pic,nick_name from user_reg " +
-                    " where score NOTNULL order by score desc limit" +
-                    " " + limit + " ;";
+                        " where score NOTNULL order by score desc limit" +
+                        " " + limit + " ;";
                 sequelize.query(query,
-                    {type: sequelize.QueryTypes.RAW})
-                    .then(function (data) {
-                        return cb(null, data[0]);
-                    }, function (err) {
-                        return cb(err);
-                    })
+                        {type: sequelize.QueryTypes.RAW})
+                        .then(function (data) {
+                            return cb(null, data[0]);
+                        }, function (err) {
+                            return cb(err);
+                        })
             }
         }
     });

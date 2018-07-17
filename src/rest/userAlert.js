@@ -11,9 +11,8 @@ var fs = require('fs'),
 
 var createUserAlter = function (req, res, next) {
     var user = req.user;
-
     async.waterfall([
-        _createUserAlter.bind(null, user, req.body), //Check user if challenge already complete
+        _createUserAlter.bind(null, req), //Check user if challenge already complete
         _fetchPriceAndNotificationSend.bind(null)
     ], function (err) {
         log.info('=>err', err);
@@ -75,19 +74,24 @@ var createUrl = function (body) {
     return productUrl;
 }
 
-var _createUserAlter = function (user, body, next) {
-    console.log(" log email ", user)
-    var email = user.user;
-    console.log(" log email ", email)
+var _createUserAlter = function (req, next) {
+    console.log(" log email ", req.user.id);
+    var email = req.user.id;
+    console.log(" log email ", email);
+    var clientIp = (req.headers["X-Forwarded-For"] ||req.headers["x-forwarded-for"] ||'').split(',')[0] ||
+           req.client.remoteAddress;
     var userAlert = {};
     userAlert.id = '';
-    userAlert.email = email || '';
-    userAlert.url = createUrl(body) || '';
-    userAlert.articalNumber = body.articalNumber || '';
-    userAlert.webSite = body.webSite || '';
+    userAlert.AddedByUserID = email || '';
+    userAlert.url = createUrl(req.body) || '';
+    userAlert.WebsiteID = req.body.webSiteID || '';
+    userAlert.website = req.body.webSite || '';
     userAlert.status = 1;
-    userAlert.createdOn = moment().unix();
-    userAlert.updatedOn = moment().unix();
+    userAlert.createdOn =  moment().utc().format('YYYY-MM-DD HH:mm:ss');
+    userAlert.lastCheckedDate =  moment().utc().format('YYYY-MM-DD HH:mm:ss');
+    userAlert.updatedOn =  moment().utc().format('YYYY-MM-DD HH:mm:ss');
+    userAlert.CreatedByIP = clientIp || '';
+    userAlert.LastUpdatedByIP =clientIp ||'';
 
     console.log("User Alert ", JSON.stringify(userAlert))
     M.get('UserAlter').create(userAlert).then(function (data) {
@@ -116,14 +120,14 @@ function arrayMax(arr) {
 
 
 var getUserAlter = function (req, res, next) {
-    var userEmail = req.user.user;
+    var userEmail = req.user.id;
     var email = req.query.email;
     if (email) {
         userEmail = email;
     }
     M.get('UserAlter').findAll({
         where: {
-            email: userEmail
+            AddedByUserID : userEmail
         },
         order: [
             ['createdOn', 'DESC']
@@ -206,7 +210,7 @@ var _updateUserAlter = function (body, user, next) {
 
 
 var getUserAlterPrice = function (req, res, next) {
-    var email = req.user.user;
+    var email = req.user.id;
     var alertId = req.params.id;
 
     console.log(req.params.id);
@@ -215,7 +219,7 @@ var getUserAlterPrice = function (req, res, next) {
 
     M.get('AlterPrice').findAll({
         where: {
-            email: email,
+            
             alertId: alertId
         },
         order: [
@@ -232,7 +236,7 @@ var getUserAlterPrice = function (req, res, next) {
 var _getFetchAlterPrice = function (email, alertId, next) {
     M.get('UserAlter').findOne({
         where: {
-            email: email,
+            AddedByUserID: email,
             id: alertId
         }
     }).then(function (data) {
@@ -252,7 +256,7 @@ var _getFetchAlterPrice = function (email, alertId, next) {
 };
 
 var fetchCurrentPrice = function (req, res, next) {
-    var email = req.user.user;
+    var email = req.user.id;
     var alertId = req.params.id;
 
     async.waterfall([

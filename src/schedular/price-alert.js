@@ -28,11 +28,11 @@ var cheerio = require('cheerio');
 
 
 var excuteUserAlter = function (userAlert, done) {
-    log.info('=================> excuteAlertStartJob ');
+    log.info('=================> excuteAlertStartJob ',JSON.stringify(userAlert));
 
     async.waterfall([
         _fetchUrlData.bind(null, userAlert.url),
-        _parseUrlData.bind(null, userAlert.webSite),
+        _parseUrlData.bind(null, userAlert.WebsiteID),
         _usertLatestPrice.bind(null, userAlert), //Check user if challenge already complete
         _sendUserNotification.bind(null, userAlert),
     ], function (err,price) {
@@ -50,9 +50,9 @@ var _usertLatestPrice = function (userAlert, price, next) {
     alterPrice.id = '';
     alterPrice.alertId = userAlert.id;
     alterPrice.price = price;
-    alterPrice.email = userAlert.email;
-    alterPrice.createdOn = moment().unix();
-    alterPrice.updatedOn = moment().unix();
+    alterPrice.WebsiteID = userAlert.WebsiteID;
+    alterPrice.createdOn = moment().utc().format('YYYY-MM-DD HH:mm:ss');;
+    alterPrice.updatedOn = moment().utc().format('YYYY-MM-DD HH:mm:ss');;
     console.log('  alterPrice ', JSON.stringify(alterPrice));
     M.get('UserAlter').update({
         price: price
@@ -117,7 +117,7 @@ var _parseUrlData = function (webSite, urlData, next) {
 //        log.info('=================> excuteAlertStartJob ', urlData);
         var price;
         switch (webSite) {
-            case 'ASOS':
+            case 1:
                var $ = cheerio.load(urlData);
                 $("span").each(function () {
                     var link = $(this);
@@ -129,7 +129,7 @@ var _parseUrlData = function (webSite, urlData, next) {
 
                 });
                 break;
-            case 'Zalando':
+            case 2:
              var $ = cheerio.load(urlData);
                 $("meta").each(function () {
                     var link = $(this);
@@ -141,7 +141,7 @@ var _parseUrlData = function (webSite, urlData, next) {
 
                 });
                 break;
-            case 'Topshop':
+            case 3:
               var $ = cheerio.load(urlData);
                 $("meta").each(function () {
                     var link = $(this);
@@ -153,19 +153,25 @@ var _parseUrlData = function (webSite, urlData, next) {
 
                 });
                 break;
-            case 'H&M':
-                var $ = cheerio.load(urlData);
-                $("span").each(function () {
+            case 4:
+               var $ = cheerio.load(urlData);
+                var flag = true;
+                $("div").each(function () {
+//                    var link = $(this);
                     var link = $(this);
+                     console.log("============link  ",link);
+                    
                     var text = link.attr('class')
-                    if (text === 'price') {
-                        console.log(" -> " + link.text());
-                        price = link.text();
+                    console.log("============",text);
+                    if (text === 'price' && flag) {
+                        flag = false;
+                        price =link.text().trim();
+                        console.log("============");
                     }
 
                 });
                 break;
-            case 'ESPRIT':
+            case 6:
                var $ = cheerio.load(urlData);
                 $("span").each(function () {
                     var link = $(this);
@@ -177,7 +183,7 @@ var _parseUrlData = function (webSite, urlData, next) {
 
                 });
                 break;
-            case 'COSSTORES':
+            case 7:
             var $ = cheerio.load(urlData);
                 $("label").each(function () {
                     var link = $(this);
@@ -190,7 +196,7 @@ var _parseUrlData = function (webSite, urlData, next) {
 
                 });
                 break;
-            case 'SHOP.MANGO':
+            case 8:
                 var $ = cheerio.load(urlData);
                 $("p").each(function () {
                     var link = $(this);
@@ -203,7 +209,7 @@ var _parseUrlData = function (webSite, urlData, next) {
 
                 });
                 break;
-            case 'BREUNINGER':
+            case 9:
                 var $ = cheerio.load(urlData);
                 $("meta").each(function () {
                     var link = $(this);
@@ -216,7 +222,7 @@ var _parseUrlData = function (webSite, urlData, next) {
 
                 });
                 break;
-            case 'NET A PORTER':
+            case 10:
                 var $ = cheerio.load(urlData);
                 $("span").each(function () {
                     var link = $(this);
@@ -228,7 +234,7 @@ var _parseUrlData = function (webSite, urlData, next) {
 
                 });
                 break;
-            case 'UNIQLO':
+            case 11:
                var $ = cheerio.load(urlData);
                 $("span").each(function () {
                     var link = $(this);

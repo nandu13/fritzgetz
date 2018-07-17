@@ -25,7 +25,11 @@ module.exports = function (sequelize, DataTypes) {
         Name: {
             type: 'nvarchar',
             field: 'Name'
-        }
+        },
+        SearchURL: {
+            type: 'nvarchar',
+            field: 'SearchURL'
+        },
     }, {
         freezeTableName: true,
         classMethods: {

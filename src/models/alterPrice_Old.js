@@ -11,30 +11,33 @@ var async = require('async'),
 var M = require('src/models');
 
 module.exports = function (sequelize, DataTypes) {
-    return sequelize.define('ProductPriceHistory', {  
+    return sequelize.define('alterPrice', {  
         id: {
             type: 'numeric',
             field: 'ID',
             autoIncrement: true,
             primaryKey: true
         },
-        WebsiteID: {
-            type: 'int',
-            field: 'WebsiteID'
-        },
         alertId: {
-            type: 'int',
-            field: 'ProductID'
+            type: 'numeric',
+            field: 'alertId'
+        },
+        email: {
+            type: 'varchar',
+            field: 'email'
         },
         price: {
-            type: 'nvarchar',
+            type: 'real',
             field: 'price'
         },
         createdOn: {
-            type: 'datetime',
-            field: 'CreatedDate'
+            type: DataTypes.BIGINT,
+            field: 'createdOn'
+        },
+        updatedOn: {
+            type: DataTypes.BIGINT,
+            field: 'updatedOn'
         }
-        
     }, {
         freezeTableName: true,
         classMethods: {
