@@ -28,19 +28,19 @@ var cheerio = require('cheerio');
 
 
 var excuteUserAlter = function (userAlert, done) {
-    log.info('=================> excuteAlertStartJob ',JSON.stringify(userAlert));
+    log.info('=================> excuteAlertStartJob ', JSON.stringify(userAlert));
 
     async.waterfall([
         _fetchUrlData.bind(null, userAlert.url),
-        _parseUrlData.bind(null, userAlert.WebsiteID),
+        _parseUrlData.bind(null, userAlert.url, userAlert.WebsiteID),
         _usertLatestPrice.bind(null, userAlert), //Check user if challenge already complete
         _sendUserNotification.bind(null, userAlert),
-    ], function (err,price) {
+    ], function (err, price) {
         log.info('=>err', err);
         if (err) {
             done(err);
         } else
-            done(null,price);
+            done(null, price);
     });
 };
 
@@ -51,8 +51,10 @@ var _usertLatestPrice = function (userAlert, price, next) {
     alterPrice.alertId = userAlert.id;
     alterPrice.price = price;
     alterPrice.WebsiteID = userAlert.WebsiteID;
-    alterPrice.createdOn = moment().utc().format('YYYY-MM-DD HH:mm:ss');;
-    alterPrice.updatedOn = moment().utc().format('YYYY-MM-DD HH:mm:ss');;
+    alterPrice.createdOn = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+    ;
+    alterPrice.updatedOn = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+    ;
     console.log('  alterPrice ', JSON.stringify(alterPrice));
     M.get('UserAlter').update({
         price: price
@@ -79,7 +81,7 @@ var _usertLatestPrice = function (userAlert, price, next) {
 var _sendUserNotification = function (userAlert, price, next) {
     var message = "Current price of alter " + userAlert.id + " is " + price;
     console.log("  message ", message);
-    notification.notificationSend(userAlert.email, message, function (err, data) {
+    notification.notificationSend(userAlert.AddedByUserID, message, function (err, data) {
         if (err) {
             console.log('Notification error ->', err);
             next(err);
@@ -110,7 +112,7 @@ var _fetchUrlData = function (url, next) {
     });
 };
 
-var _parseUrlData = function (webSite, urlData, next) {
+var _parseUrlData = function (url, webSite, urlData, next) {
     log.info('=================> _parseUrlData ', webSite);
 
     if (urlData) {
@@ -118,61 +120,81 @@ var _parseUrlData = function (webSite, urlData, next) {
         var price;
         switch (webSite) {
             case 1:
-               var $ = cheerio.load(urlData);
+                var $ = cheerio.load(urlData);
                 $("span").each(function () {
                     var link = $(this);
                     var text = link.attr('class');
                     if (text === 'current-price product-price-discounted') {
-                        console.log(" -> " +link.text());
+                        console.log(" -> " + link.text());
                         price = link.text();
                     }
 
                 });
                 break;
             case 2:
-             var $ = cheerio.load(urlData);
+                var $ = cheerio.load(urlData);
                 $("meta").each(function () {
                     var link = $(this);
                     var text = link.attr('name');
                     if (text === 'twitter:data1') {
-                        console.log(" -> " +link.attr('content'));
+                        console.log(" -> " + link.attr('content'));
                         price = link.attr('content');
                     }
 
                 });
                 break;
             case 3:
-              var $ = cheerio.load(urlData);
+                var $ = cheerio.load(urlData);
                 $("meta").each(function () {
                     var link = $(this);
                     var text = link.attr('property');
                     if (text === 'og:price:amount') {
-                        console.log(" -> " +link.attr('content'));
+                        console.log(" -> " + link.attr('content'));
                         price = link.attr('content');
                     }
 
                 });
                 break;
             case 4:
-               var $ = cheerio.load(urlData);
-                var flag = true;
-                $("div").each(function () {
-//                    var link = $(this);
-                    var link = $(this);
-                     console.log("============link  ",link);
-                    
-                    var text = link.attr('class')
-                    console.log("============",text);
-                    if (text === 'price' && flag) {
-                        flag = false;
-                        price =link.text().trim();
-                        console.log("============");
-                    }
+                if (url.indexOf('search') > -1) {
 
-                });
+                    var $ = cheerio.load(urlData);
+                    var flag = true;
+                    $("div").each(function () {
+//                    var link = $(this);
+                        var link = $(this);
+                        console.log("============link  ", link);
+
+                        var text = link.attr('class')
+                        console.log("============", text);
+                        if (text === 'price' && flag) {
+                            flag = false;
+                            price = link.text().trim();
+                            console.log("============");
+                        }
+
+                    });
+                } else {
+                    var $ = cheerio.load(urlData);
+                    var flag = true;
+                    $("span").each(function () {
+//                    var link = $(this);
+                        var link = $(this);
+                        console.log("============link  ", link);
+
+                        var text = link.attr('class')
+                        console.log("============", text);
+                        if (text === 'price' && flag) {
+                            flag = false;
+                            price = link.text().trim();
+                            console.log("============");
+                        }
+
+                    });
+                }
                 break;
             case 6:
-               var $ = cheerio.load(urlData);
+                var $ = cheerio.load(urlData);
                 $("span").each(function () {
                     var link = $(this);
                     var text = link.attr('class')
@@ -184,14 +206,14 @@ var _parseUrlData = function (webSite, urlData, next) {
                 });
                 break;
             case 7:
-            var $ = cheerio.load(urlData);
+                var $ = cheerio.load(urlData);
                 $("label").each(function () {
                     var link = $(this);
                     var text = link.attr('class')
                     if (text === 'a-label js-a-label is-reduced product-price') {
                         console.log(" -> " + link.text());
-                         price = link.text();
-                        
+                        price = link.text();
+
                     }
 
                 });
@@ -203,8 +225,8 @@ var _parseUrlData = function (webSite, urlData, next) {
                     var text = link.attr('class')
                     if (text === 'sticky-text-info sticky-price--discount') {
                         console.log(" -> " + link.text());
-                         price = link.text();
-                        
+                        price = link.text();
+
                     }
 
                 });
@@ -216,8 +238,8 @@ var _parseUrlData = function (webSite, urlData, next) {
                     var text = link.attr('itemprop')
                     if (text === 'price') {
                         console.log(" -> " + link.attr('content'));
-                         price = link.attr('content')
-                        
+                        price = link.attr('content')
+
                     }
 
                 });
@@ -235,7 +257,7 @@ var _parseUrlData = function (webSite, urlData, next) {
                 });
                 break;
             case 11:
-               var $ = cheerio.load(urlData);
+                var $ = cheerio.load(urlData);
                 $("span").each(function () {
                     var link = $(this);
                     var text = link.attr('class')

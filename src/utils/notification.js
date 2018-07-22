@@ -13,7 +13,7 @@ var request = require('request');
 var notificationSend = function (email, message, cb) {
     M.get('UserReg').findOne(
             {where: {
-                    email: email
+                    id: email
                 }}).then(function (data) {
         if (data) {
             if (data.deviceToken) {
@@ -22,12 +22,13 @@ var notificationSend = function (email, message, cb) {
                 body.notification = {
                     body: message
                 };
+                console.log("++++",JSON.stringify(body));
                 request({
                     url: 'https://fcm.googleapis.com/fcm/send',
                     method: 'POST',
                     json: true,
                     headers: {
-                        "Authorization": "key=AAAAstcuFus:APA91bHIXGLrORm0mwXiuN6RsjAXXAKGCsRM3JzoVceE8OCBcuB88lPiuCvwS5UVof_lqUAmFTxYS-qTObKzgc4d42fAVTR7KEFMooyhW9TSONMacpTjET5XbGtBNsJzSQj5RuX-VBdL",
+                        "Authorization": "key=AAAA2nsCJWg:APA91bGSnjjRY0mIabFSZ7glKQXFYndYnnGOyRy9ppyK2RXCDsVUceol90J7saUCyUXEgNozzgJA88kWqm-MoAjSbd7-v2mnd8-AqvOxqWZgp_6gP57cD4911IpDNbBCfyZrpHZfm41-xa2BPQywOh5_WWcdaLSeFw",
                         "Content-Type": "application/json"
                     },
                     body: body
@@ -55,7 +56,8 @@ var notificationSend = function (email, message, cb) {
 
     }, function (err) {
         if (err)
-            done(err);
+            console.log(err);
+            cb(err);
 
     });
 }

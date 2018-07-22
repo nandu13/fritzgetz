@@ -25,6 +25,14 @@ module.exports = function (sequelize, DataTypes) {
             type: 'nvarchar',
             field: 'UserName'
         },
+        firstName: {
+            type: 'nvarchar',
+            field: 'firstName'
+        },
+        lastName: {
+            type: 'nvarchar',
+            field: 'lastName'
+        },
         EmailConfirmed: {
             type: 'bit',
             field: 'EmailConfirmed'

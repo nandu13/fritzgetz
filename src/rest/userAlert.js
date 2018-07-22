@@ -127,7 +127,10 @@ var getUserAlter = function (req, res, next) {
     }
     M.get('UserAlter').findAll({
         where: {
-            AddedByUserID : userEmail
+            AddedByUserID : userEmail,
+            status : {
+                 $ne : 5
+            }
         },
         order: [
             ['createdOn', 'DESC']
@@ -142,16 +145,16 @@ var getUserAlter = function (req, res, next) {
 
 var updateUserAlter = function (req, res, next) {
     
-    var userEmail = req.user.user;
+    var userEmail = req.user.id;
     var email = req.body.email;
     if (email) {
         userEmail = email;
     }
-    var id = req.body.alter_id;
+    var id = req.body.alert_id;
 
     async.waterfall([
-        _findUserAlter.bind(null, userEmail, id, req.body),
-        _updateUserAlter.bind(null, req.body), //Check user if challenge already complete
+        _findUserAlter.bind(null, userEmail, id),
+        _updateUserAlter.bind(null, req), //Check user if challenge already complete
 //        _updateChallenge.bind(null, user, score, url),
 //       _sendUserNotification.bind(null, obj, message),
     ], function (err) {
@@ -164,8 +167,10 @@ var updateUserAlter = function (req, res, next) {
 };
 
 var _findUserAlter = function (emailId, id, next) {
+    console.log(" id ",id)
     M.get('UserAlter').findOne({
-        where: {email: emailId,
+        where: {
+            AddedByUserID: emailId,
             id: id}
     }).then(function (results) {
         if (results) {
@@ -183,16 +188,28 @@ var _findUserAlter = function (emailId, id, next) {
     });
 }
 
-var _updateUserAlter = function (body, user, next) {
+var _updateUserAlter = function (req, user, next) {
 
     var userAlter = {};
+    
+    var email = user.id;
+    console.log(" log email ", email);
+    var clientIp = (req.headers["X-Forwarded-For"] ||req.headers["x-forwarded-for"] ||'').split(',')[0] ||
+           req.client.remoteAddress;
+    var userAlert = {};
+//    userAlert.id = '';
+//    userAlert.AddedByUserID = email || '';
+    userAlert.url = req.body.url || user.url;
+    userAlert.WebsiteID = req.body.webSiteID || user.WebsiteID;
+//    userAlert.website = req.body.webSite || user.webSite;
+    userAlert.status = req.body.status || user.status;
+//    userAlert.createdOn =  moment().utc().format('YYYY-MM-DD HH:mm:ss');
+    userAlert.lastCheckedDate =  moment().utc().format('YYYY-MM-DD HH:mm:ss');
+    userAlert.updatedOn =  moment().utc().format('YYYY-MM-DD HH:mm:ss');
+//    userAlert.CreatedByIP = clientIp || '';
+    userAlert.LastUpdatedByIP =clientIp ||'';
 
-    userAlter.email = user.email;
-    userAlter.url = body.url || user.url;
-    userAlert.articalNumber = body.articalNumber || user.articalNumber;
-    userAlert.webSite = body.webSite || user.webSite;
-    userAlert.status = body.status || user.status;
-    userAlert.updatedOn = moment().unix();
+ 
     M.get('UserAlter').update(userAlert,
             {
                 where: {
