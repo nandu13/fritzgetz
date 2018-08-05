@@ -58,6 +58,8 @@ module.exports = function (sequelize, DataTypes) {
             type: 'nvarchar',
             field: 'LastUpdatedByIP'
         }
+        
+        
     }, {
         freezeTableName: true,
         classMethods: {

@@ -8,7 +8,7 @@ var constants = {};
 constants.ACCOUNT_STATUS = {
     ACTIVE: 1,
     WAIT_FOR_EMAIL_VALIDATION: 2,
-    WAIT_FOR_ONFIDO_RESPONSE: 3,
+//    WAIT_FOR_ONFIDO_RESPONSE: 3,
     SUSPENDED: 4,
     DELETED: 5,
     ERROR: -1

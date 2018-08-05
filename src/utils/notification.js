@@ -10,7 +10,7 @@ var request = require('request');
 
 
 // send mail with defined transport object
-var notificationSend = function (email, message, cb) {
+var notificationSend = function (email, message, data, cb) {
     M.get('UserReg').findOne(
             {where: {
                     id: email
@@ -22,7 +22,8 @@ var notificationSend = function (email, message, cb) {
                 body.notification = {
                     body: message
                 };
-                console.log("++++",JSON.stringify(body));
+                body.data = data;
+                console.log("++++", JSON.stringify(body));
                 request({
                     url: 'https://fcm.googleapis.com/fcm/send',
                     method: 'POST',
@@ -42,7 +43,7 @@ var notificationSend = function (email, message, cb) {
                             cb(null, body);
                         } catch (error) {
                             console.log(error)
-                         cb(null);
+                            cb(null);
                         }
                     }
                 });
@@ -57,7 +58,7 @@ var notificationSend = function (email, message, cb) {
     }, function (err) {
         if (err)
             console.log(err);
-            cb(err);
+        cb(err);
 
     });
 }

@@ -221,6 +221,8 @@ var updateProfile = function (req, res) {
         userReg.status = req.body.status || user.status;
         userReg.firstName = req.body.firstName || user.firstName;
         userReg.lastName = req.body.lastName || user.lastName;
+        userReg.emailNotification = req.body.emailNotification || user.emailNotification;
+        userReg.pushNotification = req.body.pushNotification || user.pushNotification;
         M.get('UserReg').update(
                 userReg,
                 {

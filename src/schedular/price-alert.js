@@ -79,9 +79,16 @@ var _usertLatestPrice = function (userAlert, price, next) {
 };
 
 var _sendUserNotification = function (userAlert, price, next) {
-    var message = "Current price of alter " + userAlert.id + " is " + price;
+    var message = "price  has been dropped for " + userAlert.url + " to " + price;
     console.log("  message ", message);
-    notification.notificationSend(userAlert.AddedByUserID, message, function (err, data) {
+    
+    var data = {
+        url : userAlert.url,
+        webSiteId : userAlert.WebsiteID,
+        alertID : userAlert.id
+    }
+    
+    notification.notificationSend(userAlert.AddedByUserID, message,data, function (err, data) {
         if (err) {
             console.log('Notification error ->', err);
             next(err);

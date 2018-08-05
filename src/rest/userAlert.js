@@ -288,9 +288,29 @@ var fetchCurrentPrice = function (req, res, next) {
     });
 };
 
+
+var getUserAlertById = function (req, res, next) {
+    var alertId = req.query.id;
+    
+    M.get('UserAlter').findOne({
+        where: {
+            id : alertId,
+            status : {
+                 $ne : 5
+            }
+        }
+    }).then(function (data) {
+        helper.returnTrue(req, res, 'Success', data);
+    }).catch(function (err) {
+        console.log(err);
+        helper.returnFalse(req, res, err.message, {});
+    });
+};
+
 var userAlert = {
     createUserAlter: createUserAlter,
     getUserAlert: getUserAlter,
+    getUserAlertById: getUserAlertById,
     updateUserAlter: updateUserAlter,
     getUserAlterPrice: getUserAlterPrice,
     fetchCurrentPrice: fetchCurrentPrice

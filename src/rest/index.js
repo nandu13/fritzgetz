@@ -26,6 +26,7 @@ router.get(BASE_URL + 'v1/website', website.getWebsites);
 
 router.post(BASE_URL + 'v1/user/alert', userAlert.createUserAlter);
 router.get(BASE_URL + 'v1/user/alert', userAlert.getUserAlert);
+router.get(BASE_URL + 'v1/user/alert/:id', userAlert.getUserAlert);
 router.get(BASE_URL + 'v1/user/alert/:id/price', userAlert.getUserAlterPrice);
 router.patch(BASE_URL + 'v1/user/alert', userAlert.updateUserAlter);
 

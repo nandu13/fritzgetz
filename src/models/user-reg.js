@@ -88,7 +88,15 @@ module.exports = function (sequelize, DataTypes) {
         platform: {
             type: 'varchar',
             field: 'platform'
-        }
+        },
+        emailNotification: {
+            type: 'bit',
+            field: 'emailNotification'
+        },
+        pushNotification: {
+            type: 'bit',
+            field: 'pushNotification'
+        },
     }, {
         freezeTableName: true,
         classMethods: {
