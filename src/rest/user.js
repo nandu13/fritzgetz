@@ -16,7 +16,8 @@ var fs = require('fs'),
         log = require('src/utils/logger')(module),
         notification = require('src/rest/notification'),
         redis = require('src/redis').getRedisInstance(),
-        md5 = require('md5');
+        md5 = require('md5'),
+        passwordCrypto = require('src/utils/passwordCrypto');
 
 var createUserRegistration = function (corporate, cb) {
     console.log(" createUserRegistration reg ===========>", corporate);
@@ -70,17 +71,18 @@ var registration = function (req, res, next) {
                 userReg.email = req.body.email;
                 userReg.EmailConfirmed = false;
                 userReg.PhoneNumberConfirmed = false;
-                userReg.LockoutEnabled = false;
+                userReg.LockoutEnabled = true;
                 userReg.TwoFactorEnabled = false;
                 userReg.AccessFailedCount = 0;
                 userReg.firstName = req.body.firstName || '';
                 userReg.lastName = req.body.lastName || '';
+                userReg.SecurityStamp = crypto.randomBytes(16).toString('hex');
                 userReg.status = constant.ACCOUNT_STATUS.WAIT_FOR_EMAIL_VALIDATION;
 //                userReg.updatedOn = moment().unix();
 //                userReg.createdOn = moment().unix();
                 if (req.body.password) {
 
-                    userReg.password = crypto.createHash('md5').update(req.body.password).digest("hex");
+                    userReg.password = passwordCrypto.passwordHash(req.body.password,crypto.randomBytes(16));
                 } else {
                     console.log("Password empty");
                 }

@@ -10,7 +10,8 @@ var fs = require('fs'),
         notification = require('src/rest/notification'),
         auth1 = require('src/utils/auth'),
         redis = require('src/redis').getRedisInstance(),
-        crypto = require('crypto');
+        crypto = require('crypto'),
+        passwordCrypto = require('src/utils/passwordCrypto');
 
 
 var fetchUserByEmailId = function (emailId, cb) {
@@ -52,13 +53,13 @@ var login = function (req, res, next) {
                 token: token
             });
         } else if (results && results.userData) {
-            if (crypto.createHash('md5').update(password).digest("hex")=== results.userData.password) {
+            if (passwordCrypto.matchPassword(password,results.userData.password)) {
                 if (results.userData.status === constant.ACCOUNT_STATUS.WAIT_FOR_EMAIL_VALIDATION) {
                     helper.returnTrue(req, res, constant.REG_MESSAGE.PENDING_EMAIL_VERIFICATION, {
                         status: results.userData.status,
                         token: token
                     });
-                } else if (results.userData.status === constant.ACCOUNT_STATUS.ACTIVE) {
+                } else if (results.userData.status === constant.ACCOUNT_STATUS.ACTIVE || !results.userData.status) {
                     token = auth1.createJWT({
                         id: results.userData.id,
                         user: results.userData.email

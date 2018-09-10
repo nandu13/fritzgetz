@@ -6,6 +6,7 @@
     "async": "^2.6.1",
     "aws-sdk": "^2.254.1",
     "cheerio": "^1.0.0-rc.2",
+    "chilkat_node10_linux64": "^9.50.75",
     "config": "^1.30.0",
     "express": "^4.16.3",
     "firebase": "^5.0.4",
