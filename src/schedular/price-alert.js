@@ -81,14 +81,14 @@ var _usertLatestPrice = function (userAlert, price, next) {
 var _sendUserNotification = function (userAlert, price, next) {
     var message = "price  has been dropped for " + userAlert.url + " to " + price;
     console.log("  message ", message);
-    
+
     var data = {
-        url : userAlert.url,
-        webSiteId : userAlert.WebsiteID,
-        alertID : userAlert.id
+        url: userAlert.url,
+        webSiteId: userAlert.WebsiteID,
+        alertID: userAlert.id
     }
-    
-    notification.notificationSend(userAlert.AddedByUserID, message,data, function (err, data) {
+
+    notification.notificationSend(userAlert.AddedByUserID, message, data, function (err, data) {
         if (err) {
             console.log('Notification error ->', err);
             next(err);
@@ -275,11 +275,32 @@ var _parseUrlData = function (url, webSite, urlData, next) {
 
                 });
                 break;
+            case 12:
+
+                var body = urlData.replace("angular.callbacks._1(", "");
+                body = body.replace(")", "");
+                price = JSON.parse(body).content.docs[0].price;
+
+                break;
+            case 13:
+                var $ = cheerio.load(urlData);
+                $("meta").each(function () {
+                    var link = $(this);
+                    var text = link.attr('property');
+
+                    if (text === 'og:description') {
+                        var text1 = link.attr('content');
+                        price = text1.split(" ")[0]
+                    }
+
+                });
+                break;
         }
         log.info('=================> _parseUrlData ', price);
         next(null, price);
     }
 }
+
 
 
 module.exports.excuteUserAlter = excuteUserAlter;
